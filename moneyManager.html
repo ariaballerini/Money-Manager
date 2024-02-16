@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Money Manager</title>
+  </head>
+  <body>
+    <div class="gradient-background">
+      <div id="appContainer" class="appContainer">
+        <div class="leftContent">
+          <!-- all user data -->
+          <div id="userData" class="userDataContainer">
+            <div id="user-firstname" class="firstname">Firstname</div>
+            <div id="user-lastname" class="lastname">Lastname</div>
+          </div>
+
+          <div class="toggleAdd">
+            <button id="incomeToggle" class="button incomeOption">
+              Income
+            </button>
+            <button id="expenseToggle" class="button expenseOption notSelected">
+              Expense
+            </button>
+          </div>
+
+          <div class="addButtonContainer">
+            <!-- add description input -->
+            <div class="addContainer">
+              <input
+                type="text"
+                class="form-control addDescription"
+                id="addDescriptionInput"
+                placeholder="Insert description"
+              />
+            </div>
+
+            <!-- add amount button -->
+            <div class="addContainer addAmountContainer">
+              <input
+                type="text"
+                class="form-control addAmount"
+                id="addInput"
+                placeholder="Insert amount"
+              />
+              <button id="addButton" class="button">Add</button>
+            </div>
+          </div>
+
+          <!-- add category buttons -->
+          <div id="categoriesList" class="categories"></div>
+        </div>
+
+        <div class="rightContent">
+          <!-- actions on transactions section -->
+          <div class="transactionsActions">
+            <div class="balanceContainer">
+              <div id="balance" class="balance">000 €</div>
+            </div>
+            <div class="orderByContainer">
+              <select id="orderBy">
+                <option value="" hidden selected>Order by</option>
+                <option value="newest">Newest to oldest</option>
+                <option value="oldest">Oldest to newest</option>
+                <option value="sector">Sector of purchase</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- all transactions -->
+          <div class="transactionsContainer">
+            <div class="transactionsTitles">
+              <div class="descriptionTitle">Description</div>
+              <div class="dateTitle">Date</div>
+              <div class="amountTitle">Amount</div>
+            </div>
+            <div id="transactions" class="transactionsList"></div>
+          </div>
+        </div>
+
+        <!-- javascript -->
+        <script type="module" src="./Dist/app.js"></script>
+      </div>
+    </div>
+  </body>
+</html>
