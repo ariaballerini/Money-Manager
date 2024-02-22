@@ -1,5 +1,5 @@
 import gService from "./global-service.js";
-
+import { current } from "./app.js";
 const transactionsContainer = document.getElementById("transactions");
 let userInfo = { // global variable to host user info
     Id: null,
@@ -67,25 +67,28 @@ function setCategories(userCategories){
 }
 
 /* function to recover all transactions */
-async function setTransactions(transactions, orderBy = "newest"){
+async function setTransactions(transactions){
     // transactions = response.transactions, is getting existing transactions
-    // sorts transactions based on orderBy option
+    // sorts transactions based on current orderBy option
 
     if (transactions !== null) {
-        if (orderBy === 'newest') {
-            transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        } else if (orderBy === 'oldest') {
-            transactions.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-        } else if (orderBy === 'description') {
-            transactions.sort((a, b) => a.description.localeCompare(b.description));
-        }
-
+        orderTransactions(transactions, current.orderBy);
         transactions.forEach(transactionData => {
             createTransaction(transactionData);
         });
     }
     else {
         console.log("No transactions to process");
+    }
+}
+
+function orderTransactions(transactions, orderBy){
+    if (orderBy === 'newest') {
+        transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    } else if (orderBy === 'oldest') {
+        transactions.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    } else if (orderBy === 'description') {
+        transactions.sort((a, b) => a.description.localeCompare(b.description));
     }
 }
 
@@ -139,63 +142,108 @@ function createTransactionDataSection(transactionData, transactionElement, isPos
 }
 
 function createEditTransactionSection(transactionData, transactionElement, dataRow, amount){
-    const editTransactionSection = document.createElement("div"); // hidden section by default
-    editTransactionSection.classList.add("hidden"); 
+    const editTransactionSection = document.createElement("div"); // hidden section by default 
     transactionElement.appendChild(editTransactionSection);
-
+    let changesHidden = true;
     let editButton;
     let deleteButton;
+    
     let undoButton;
     let saveButton;
     let editInput;
     let currentValue;
 
     transactionElement.onclick = function() {
-        editTransactionSection.classList.remove("hidden");
-        editTransactionSection.classList.add("visible"); // shows section on click
-        editButton = gService.createButton(editTransactionSection, "Edit", ["button", "editUndoButtons"]);
-        deleteButton = gService.createButton(editTransactionSection, "Delete", ["button", "deleteSaveButtons"]);
+        toggleTransaction();
 
-        /* events on edit transaction buttons*/
-        editButton.onclick = function() {
-            editButton.remove();
-            deleteButton.remove();
+        /* event on edit button*/
+        // editButton.onclick = function() {
+        //     editButton.remove();
+        //     deleteButton.remove();
 
-            //TODO: implement different inputs to edit description, date or amount
-            editInput = gService.createInput(editTransactionSection, "number", ["form-control"]);
-            currentValue = transactionData.amount;
-            editInput.value = currentValue.innerText;
+        //     //TODO: implement different inputs to edit description, date or amount
+        //     editInput = gService.createInput(editTransactionSection, "number", ["form-control"]);
+        //     currentValue = transactionData.amount;
+        //     editInput.value = currentValue.innerText;
 
-            undoButton = gService.createButton(editTransactionSection, "Undo", ["button", "editUndoButtons"]);
-            saveButton = gService.createButton(editTransactionSection, "Save", ["button", "deleteSaveButtons"]);
+        //     undoButton = gService.createButton(editTransactionSection, "Undo", ["button", "editUndoButtons"]);
+        //     saveButton = gService.createButton(editTransactionSection, "Save", ["button", "deleteSaveButtons"]);
 
-            undoButton.onclick = function(){
-                undoButton.remove();
-                saveButton.remove();
-                editButton = gService.createButton(editTransactionSection, "Edit", ["button", "editUndoButtons"]);
-                deleteButton = gService.createButton(editTransactionSection, "Delete", ["button", "deleteSaveButtons"]);
+        //     undoButton.onclick = function(){
+        //         undoButton.remove();
+        //         saveButton.remove();
+        //         editButton = gService.createButton(editTransactionSection, "Edit", ["button", "editUndoButtons"]);
+        //         deleteButton = gService.createButton(editTransactionSection, "Delete", ["button", "deleteSaveButtons"]);
+        //     }
+
+        //     saveButton.onclick = function(){
+        //         const originalValue = transactionData.amount;
+        //         const inputValue = editInput.value;
+        //         if(inputValue.length === 0){
+        //             editInput.classList.add("error");
+        //             return;
+        //         }
+        //         editInput.classList.remove("error");
+        //         originalValue = Number(inputValue);
+        //         amount.innerText = originalValue >= 0 ? `+${originalValue}` : originalValue;
+        //         editTransactionSection.classList.remove("visible");
+        //         editTransactionSection.classList.add("hidden");
+        //     }
+        // };
+
+        /**
+         * Event listener when user clicks delete button on a single transaction.
+         * @param transactionData comes from the creating process of this specific div element,
+         * @function findIndex takes the current global array of transactions and finds the one matching,
+         * @function splice gets the index of that transaction in the array and deletes it.
+         * Then the new array is given to @param dataToSave that passes it to @function saveData.
+         * If the POST request goes well, the element gets removed also from the interface,
+         * otherwise console.log() prints an error.
+         */
+        deleteButton.onclick = async function() {
+            const transactions = current.response.transactions;
+            const index = transactions.findIndex(t => t === transactionData);
+            if (index !== -1) {
+                transactions.splice(index, 1);
             }
 
-            saveButton.onclick = function(){
-                const originalValue = transactionData.amount;
-                const inputValue = editInput.value;
-                if(inputValue.length === 0){
-                    editInput.classList.add("error");
-                    return;
-                }
-                editInput.classList.remove("error");
-                originalValue = Number(inputValue);
-                amount.innerText = originalValue >= 0 ? `+${originalValue}` : originalValue;
-                editTransactionSection.classList.remove("visible");
-                editTransactionSection.classList.add("hidden");
-            }
-        };
+            current.dataToSave = {
+                id : current.response.id,
+                firstname : current.response.firstname,
+                lastname: current.response.lastname,
+                transactions: transactions
+            };
 
-        deleteButton.onclick = function() {
+            gService.isLoading(true);
+            await gService.saveData(gService.url, current.dataToSave);
             transactionElement.remove();
-            saveData();
+            gService.isLoading(false);
+            alert(`${transactionData.description} removed`);
         };
     };
+
+    /**
+     * Function to hide or show the edit section on a single transaction:
+     * if @param changesHidden is true, eventually created edit/delete buttons are removed and section becomes hidden,
+     * if @param changesHidden is false, creates edit/delete buttons and section becomes visible
+     */
+    function toggleTransaction(){
+        if (changesHidden){
+            changesHidden = false;
+            editButton = gService.createButton(editTransactionSection, "Edit", ["button", "editUndoButtons"]);
+            deleteButton = gService.createButton(editTransactionSection, "Delete", ["button", "deleteSaveButtons"]);
+            editTransactionSection.classList.remove("hidden");
+            editTransactionSection.classList.add("transactionActions", "visible");
+
+        } else {
+            changesHidden = true;
+            if (editButton != null && deleteButton != null){
+                editButton.remove();
+                deleteButton.remove();
+            }
+            editTransactionSection.classList.add("hidden");
+        }
+    }
 }
 
 
@@ -203,19 +251,10 @@ function createEditTransactionSection(transactionData, transactionElement, dataR
 
 
 export default {
-    setUserInfo:(userId)=> setUserInfo(userId),
-    capitalizeFirstLetter:(string)=> capitalizeFirstLetter(string),
-    setCategories:(userCategories)=> setCategories(userCategories),
-    createCategory:(category, categoryList)=> createCategory(category, categoryList),
     userCategories: userCategories,
-    setTransactions:(userTransactions, orderBy = "newest")=> setTransactions(userTransactions, orderBy = "newest"),
-    clickAddAmount:(newAmount, newDescription, incomeOption)=> clickAddAmount(newAmount, newDescription, incomeOption),
-    createTransaction:(transactionData)=> createTransaction(transactionData),
-    setDescription:(transactionData, transactionElement, isPositive)=> setDescription(transactionData, transactionElement, isPositive),
-    setDate:(transactionData, transactionElement, isPositive)=> setDate(transactionData, transactionElement, isPositive),
-    setAmount:(transactionData, transactionElement, isPositive)=> setAmount(transactionData, transactionElement, isPositive),
-    setBalance:(amount)=> setBalance(amount),
-    createShowDetailsButton:(transactionButtons)=> createShowDetailsButton(transactionButtons),
-    createEditButton:(transactionButtons)=> createEditButton(transactionButtons),
-    createRemoveButton:(transactionButtons)=> createRemoveButton(transactionButtons),
+    setUserInfo:(userId)=> setUserInfo(userId),
+    setCategories:(userCategories)=> setCategories(userCategories),
+    setTransactions:(transactions)=> setTransactions(transactions),
+    orderTransactions:(transactions, orderBy)=> orderTransactions(transactions, orderBy),
+    createTransaction:(transactionData)=> createTransaction(transactionData)
 }

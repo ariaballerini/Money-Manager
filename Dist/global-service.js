@@ -1,21 +1,15 @@
 import uService from "./user-service.js";
-
-/** All global variables here */
-const url = "https://demo-corso-commit.acm-e.com/api/moneyTransactions/";
-const transactions = [];
-let balance = 0; // initial balance always starts from 0
-let dataToSave = {};
-let incomeOption = true;
-
-/** All selectors here */
+import { current } from "./app.js";
+const layer = document.getElementById("loading");
 const loginContainerSelector = document.getElementById("login");
 const userAlertsSelector = document.getElementById("userAlerts");
 const appContainerSelector = document.getElementById("appContainer");
-const addButtonSelector = document.getElementById("addButton");
-const addInputSelector = document.getElementById("addInput");
-const addDescriptionInputSelector = document.getElementById("addDescriptionInput");
-const incomeOptionSelector = document.getElementById("incomeToggle");
-const expenseOptionSelector = document.getElementById("expenseToggle");
+const url = "https://demo-corso-commit.acm-e.com/api/moneyTransactions/";
+const transactions = [];
+
+let balance = 0;
+
+/* --------------------------------------------------------------------- */
 
 /** Function to darken view and show a loading icon
  * @param show (required) is a boolean true/false:
@@ -24,19 +18,17 @@ const expenseOptionSelector = document.getElementById("expenseToggle");
 */
 function isLoading(show){
     if(show){
-        const layer = document.createElement("div");
-        layer.classList.add("loadingLayer");
-        layer.id = "loading";
-        loginContainerSelector.appendChild(layer);
-
+        layer.classList.remove("hidden");
         const loadingIcon = document.createElement("img");
         loadingIcon.src = "./Assets/loadingIcon.svg";
+        loadingIcon.id = "loadingIcon";
         layer.appendChild(loadingIcon);
         return;
     } else{
-    const layer = document.getElementById("loading");
-    layer.remove();
+        layer.classList.add("hidden");
     }
+    const loadingIcon = document.getElementById("loadingIcon")
+    loadingIcon.remove();
 }
 
 /**
@@ -62,12 +54,9 @@ async function getUserData(insertedId){
     }
 }
 
-/** Functions that cope with the login interface:
- * @function showLoginError adds an error message when the inserted user id is invalid,
+/** Function to add an error message when the inserted user id is invalid,
  * @returns @param errorMessage, used to remove() the first error message if the user fails again;
- * @function toggleLogin switches visible/invisible classes to hide login and show user content
 */
-
 function showLoginError(){
     const errorMessage = document.createElement("div");
     errorMessage.classList.add("errorLogin");
@@ -80,9 +69,11 @@ function showLoginError(){
  * @function loadCurrentExpense asks the API for all user data and splits them in:
  * @function setUserInfo (user-service.js file) requiring @param response.id
  * @function setCategories (user-service.js file) requiring @param userCategories
- * @function setTransactions (user-service.js file) requiring @param response.transactions
- * I've also created an event to auto-reaload the background size (gradient):
- * @event contentChangeEvent gets dispatched when content inside appContainer changes.
+ * @function Array.prototype.push.apply pushes given data (response.transactions)
+ * inside a given array (transactions, that was initialized as empty so now gets filled)
+ * @function setTransactions (user-service.js file) requiring @param transactions
+ * @function setBalance requiring @param transactions
+ * I've also created a custom event to auto-reaload the background size (gradient):
  * @alert warns the user about not receiving any response from the API
   */
 async function loadCurrentExpense(response){
@@ -92,8 +83,8 @@ async function loadCurrentExpense(response){
         uService.setCategories(userCategories);
         Array.prototype.push.apply(transactions, response.transactions);
         uService.setTransactions(transactions);
+        console.log("Starting transactions:", transactions);
         setBalance(transactions);
-        appContainerSelector.dispatchEvent(contentChangeEvent);
     } else {
         alert("No response from server");
     }
@@ -101,12 +92,12 @@ async function loadCurrentExpense(response){
 }
 
 /**
- * Function to set current user balance, takes
+ * Function to set current user balance, takes the
  * @array transactions (= @param response.transactions)
  * and foreach transaction in the array, adds the "amount" value to balance
  * (@balance is initialized at zero), then replaces the total on the interface
  */
-function setBalance(transactions){ // expects an array of transactions
+function setBalance(transactions){
     transactions.forEach(transaction => {
         balance += transaction.amount;
     });
@@ -114,6 +105,10 @@ function setBalance(transactions){ // expects an array of transactions
     balanceElement.innerText = balance.toFixed(2) + " €"; // toFixed(2) displays balance with 2 decimals
 }
 
+/**
+ * Function to switch visible/hidden classes to the login section
+ * and show user content, when user exists
+ */
 function toggleLogin() {
     loginContainerSelector.classList.remove("visible");
     loginContainerSelector.classList.add("hidden");
@@ -121,27 +116,7 @@ function toggleLogin() {
     appContainerSelector.classList.add("visible");
 }
 
-
-async function saveData(url, dataToSave) {
-    console.log("Saving data..", dataToSave);
-    try {
-        const response = await fetch(url,{
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(dataToSave)
-        });
-
-        const jsonData = await response.json();
-        setBalance(jsonData.transactions);
-        return jsonData;
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-
+/* --------------------------------------------------------------------- */
 
 /** Helful global functions to quickly generate new elements
  * @function createButton to handle a new button creation
@@ -166,105 +141,88 @@ function createInput(parent, inputType, classes){
     return input;
 }
 
+/* --------------------------------------------------------------------- */
 
 
-
-/* clicking the add button */
-const addButtonEvent = function() {
-    addButtonSelector.addEventListener("click", function() {
-        let newAmount = addInputSelector.value;
-        let newDescription = addDescriptionInputSelector.value;
-        while(newAmount.length === 0) {
-            addInputSelector.classList.add("error");
-            return;
-        } addInputSelector.classList.remove("error");
-        clickAddAmount(newAmount, newDescription, incomeOption);
-
-        /* inputs turn back empty */
-        addInputSelector.value = "";
-        addDescriptionInputSelector.value = "";
-    });
-}
-
-/* function to handle click on "Add" button */
-async function clickAddAmount(newAmount, newDescription, incomeOption) {
-
-    console.log("Click add amount function: Clicked!")
-    let currentData = await getUserData(); // getting user current data
-    let currentUserId = currentData.id; // selecting user id
-
-    // checks if incomeOption is true, otherwise counts the amount as an expense (expenseOption)
+/**
+ * Function to handle user click on "Add" button.
+ * This function uses the updated @param response of the imported @object "current".
+ * @param amount checks if incomeOption is true (leaves the amount as positive number)
+ * or false (treats it as an expense, adds "-" to transform it into a negative number);
+ * @param newTransaction stores the new transaction informations given by the user
+ * (@param timestamp sends the current click time and date);
+ * @function transactions.unshift() gets the global @array transactions and adds the new one (as first).
+ * @param dataToSave recreates the API format ready for a POST request:
+ * same user infos given by the GET request + updated local array of transactions.
+ * @function saveData sends the POST request to the server
+ * @function createTransaction (user-service.js) uses "newTransaction" data to add it to the interface
+ * */ 
+async function clickAddAmount(newDescription, newAmount, incomeOption) {
+    isLoading(true);
     const amount = incomeOption ? Number(newAmount) : -Number(newAmount);
-
-    // here adding a new transaction
     const newTransaction = {
         description: newDescription,
-        timestamp: new Date().toISOString(),  // sends current POST time and date
+        timestamp: new Date().toISOString(),
         amount: amount
     };
+    transactions.unshift(newTransaction);
 
-    // gets the local array of current transactions and add the new one
-    transactions.push(newTransaction);
-
-    // creates the new data object with the updated transactions
-    dataToSave = {
-        ...uService.setUserInfo(currentUserId),
+    current.dataToSave = {
+        id : current.response.id,
+        firstname : current.response.firstname,
+        lastname: current.response.lastname,
         transactions: transactions
     };
 
-    // Save the new data to the server
-    await saveData(url, dataToSave);
-
-     // handle the new transaction and updates balance
-     uService.createTransaction(newTransaction);
-     setBalance(transactions);
+    await saveData(url, current.dataToSave);
+    uService.createTransaction(newTransaction);
+    isLoading(false);
+    alert(`${newTransaction.description} added`);
 }
 
-/* clicking the income button (default) */
-const incomeOptionEvent = function() {
-    incomeOptionSelector.addEventListener("click", function() {
-    incomeOption = true;
-    incomeOptionSelector.classList.remove("notSelected");
-    expenseOptionSelector.classList.add("notSelected");
-    })
+/**
+ * Function to send a POST request. If the request succeds (200, ok) response in parsed in a json
+ * and used to update the global @param response inside @object "current".
+ * @function setBalance reloads balance amount only if POST is gone well, after being brought back to zero.
+ */
+async function saveData(url, dataToSave) {
+    console.log("Saving data...");
+    const promise = await fetch(url,{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dataToSave)
+        });
+
+    if(promise.ok){
+        current.response = await promise.json();
+        console.log("New transactions:", current.response.transactions);
+
+        balance = 0;
+        setBalance(current.response.transactions);
+        //TODO: reorder transactions automatically after adding one
+        //uService.orderTransactions(current.response.transactions, current.orderBy)
+    } else{
+        alert("OPS! Request failed");
+    }
 }
 
-/* clicking the expense button */
-const expenseOptionEvent = function() {
-    expenseOptionSelector.addEventListener("click", function() {
-        incomeOption = false;
-        expenseOptionSelector.classList.remove("notSelected");
-        incomeOptionSelector.classList.add("notSelected");
-    })
-}
-
-/* creating a personalized event to adjust background when content changes (adding/removing) */
-const contentChangeEvent = new Event("contentChanged");
-appContainerSelector.addEventListener("contentChanged", function() {
-    var gradientBackground = document.querySelector(".gradient-background");
-    // delaying event in 1s
-    setTimeout(function() {
-        gradientBackground.style.height = appContainerSelector.scrollHeight + "px";
-    }, 1);
-});
-
-
-
-
+/* --------------------------------------------------------------------- */
 
 export default {
     transactions: transactions,
-    showLoginError: showLoginError,
-    toggleLogin: toggleLogin,
-    loadCurrentExpense:(insertedId)=> loadCurrentExpense(insertedId),
-    getUserData:(insertedId)=> getUserData(insertedId),
-    saveData:(url, data = {})=> saveData(url, data = {}),
+    url: url,
     isLoading:(show)=> isLoading(show),
-    handleNewTransaction:(data)=> handleNewTransaction(data),
+    getUserData:(insertedId)=> getUserData(insertedId),
+    showLoginError: showLoginError,
+    loadCurrentExpense:(insertedId)=> loadCurrentExpense(insertedId),
     setBalance:(transactionData)=> setBalance(transactionData),
+    toggleLogin: toggleLogin,
+
     createButton:(parent, innerText, classes)=> createButton(parent, innerText, classes),
     createInput:(parent, inputType, classes)=> createInput(parent, inputType, classes),
-    addButtonEvent: addButtonEvent,
-    incomeOptionEvent: incomeOptionEvent,
-    expenseOptionEvent: expenseOptionEvent
+
+    clickAddAmount:(newAmount, newDescription, incomeOption)=> clickAddAmount(newAmount, newDescription, incomeOption),
+    saveData:(url, dataToSave) => saveData(url, dataToSave)
 }

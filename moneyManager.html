@@ -13,6 +13,7 @@
     <title>Money Manager</title>
   </head>
   <body>
+    <div id="loading" class="loadingLayer hidden"></div>
     <div class="gradient-background">
       <div id="login" class="login visible">
         <div id="userAlerts"></div>
@@ -64,13 +65,17 @@
             </div>
           </div>
 
-          <!-- add category buttons -->
-          <div id="categoriesList" class="categories"></div>
+          <div class="return">
+            <!-- add category buttons -->
+            <div id="categoriesList" class="categories"></div>
+            <!-- back to login button -->
+            <button class="button homeButton">Return to homepage</button>
+          </div>
         </div>
 
         <div class="rightContent">
           <!-- actions on transactions section -->
-          <div class="transactionsActions">
+          <div class="balanceAndOrder">
             <div class="balanceContainer">
               <div id="balance" class="balance">000 €</div>
             </div>
