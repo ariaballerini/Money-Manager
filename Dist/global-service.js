@@ -1,5 +1,6 @@
 import uService from "./user-service.js";
 import { current } from "./app.js";
+import { contentChangeEvent } from "./app.js";
 const layer = document.getElementById("loading");
 const loginContainerSelector = document.getElementById("login");
 const userAlertsSelector = document.getElementById("userAlerts");
@@ -85,6 +86,7 @@ async function loadCurrentExpense(response){
         uService.setTransactions(transactions);
         console.log("Starting transactions:", transactions);
         setBalance(transactions);
+        appContainerSelector.dispatchEvent(contentChangeEvent);
     } else {
         alert("No response from server");
     }
@@ -201,6 +203,7 @@ async function saveData(url, dataToSave) {
 
         balance = 0;
         setBalance(current.response.transactions);
+        appContainerSelector.dispatchEvent(contentChangeEvent);
         //TODO: reorder transactions automatically after adding one
         //uService.orderTransactions(current.response.transactions, current.orderBy)
     } else{

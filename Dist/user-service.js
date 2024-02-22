@@ -1,24 +1,31 @@
 import gService from "./global-service.js";
 import { current } from "./app.js";
 const transactionsContainer = document.getElementById("transactions");
-let userInfo = { // global variable to host user info
+let userInfo = {
     Id: null,
     Firstname: null,
     Lastname: null
 };
- 
+
+//TODO: implement different categories for each userId
+//TODO: add the category info when creating a new transaction
 let userCategories = [
     "grocery",
     "health",
     "car",
     "shopping",
     "eatout" 
-] //TODO: implement different categories for each userId
+]
 
+/* --------------------------------------------------------------------- */
 
-/* function to recover user id and set firstname/lastname */
+/**
+ * Function to recover user id and set firstname/lastname on the interface.
+ * @param userId in this case is formatted as "firstname.lastname",
+ * @function split splits it in 2 and updates the global @param userInfo;
+ * @function capitalizeFirstLetter capitalizes firstname/lastname first letters.
+ */
 function setUserInfo(userId){
-
     const [userFirstname, userLastname] = userId.split('.');
 
     userInfo = { // updating user info
@@ -33,15 +40,18 @@ function setUserInfo(userId){
     const lastname = document.getElementById("user-lastname");
     lastname.innerText = capitalizeFirstLetter(userLastname);
 
-    /* function to capitalize firstname/lastname first letters */
     function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
     }
-
-    return userInfo;
 }
 
-/* function to set all user categories */
+/**
+ * Function to generate all user categories cards, takes global
+ * @param userCategories and forech category creates one card;
+ * @function createCategory actually creates the card as a button with an image
+ * (note that the category name MUST equal the image name to match,
+ * if they don't match the interface will show the loadingIcon as default).
+ */
 function setCategories(userCategories){
     const categoryList = document.getElementById("categoriesList");
     
@@ -49,7 +59,6 @@ function setCategories(userCategories){
         createCategory(category, categoryList);      
     });
 
-    /* function to create a category */
     function createCategory(category, categoryList) {
         const categoryName = document.createElement("button");
         categoryName.classList.add("button", "categoryButton");
@@ -58,15 +67,24 @@ function setCategories(userCategories){
         image.classList.add("categoryIcon");
         image.src = `./Assets/${category}.png`;
         image.onerror = function() {
-            image.src = "./Assets/loadingIcon.svg"; // default icon
+            image.src = "./Assets/loadingIcon.svg";
         }
         
-        categoryName.appendChild(image);  // adds the icon to the button
-        categoryList.appendChild(categoryName); // adds the button to the list
+        categoryName.appendChild(image);
+        categoryList.appendChild(categoryName);
     }
 }
 
-/* function to recover all transactions */
+/**
+ * Functions to set all transactions on the interface.
+ * @function setTransactions takes the global @array of transactions,
+ * orders them in @function orderTransactions and foreach transaction creates one section.
+ * When creating the single transaction section, @function createTransaction
+ * actually creates two other inner sections:
+ * - one for real data with @function createTransactionDataSection;
+ * - one for that section editing buttons with @function createEditTransactionSection.
+ * @function createTransaction can be called also for one single transaction added.
+ */
 async function setTransactions(transactions){
     // transactions = response.transactions, is getting existing transactions
     // sorts transactions based on current orderBy option
@@ -92,7 +110,6 @@ function orderTransactions(transactions, orderBy){
     }
 }
 
-/* functions to create a unique transaction */
 function createTransaction(transactionData){
     const transactionElement = document.createElement("div");
     transactionElement.classList.add("transaction");
@@ -103,6 +120,15 @@ function createTransaction(transactionData){
     createEditTransactionSection(transactionData, transactionElement, dataRow, amount);
 }
 
+/**
+ * This function splits the received @param transactionData into 3 inner sections:
+ * @function setDescription to create a div for description
+ * @function setDate to create a div for date
+ * @function setAmount to create a div for amount
+ * @param isPositive is used to visually add the "+" sign if the transaction is an income.
+ * All these informations are specifically related to that @param transactionElement 
+ * @returns @param dateRow and @param amount to use them for the edit button.
+ */
 function createTransactionDataSection(transactionData, transactionElement, isPositive){
 
     const dataRow = document.createElement("div");
@@ -113,7 +139,6 @@ function createTransactionDataSection(transactionData, transactionElement, isPos
     setDate();
     let amount = setAmount();
     
-    /* functions to set (that) transaction description, date and amount*/
     function setDescription(){
         const description = document.createElement("div");
         description.classList.add("description");
@@ -141,6 +166,12 @@ function createTransactionDataSection(transactionData, transactionElement, isPos
     return {dataRow, amount};
 }
 
+/**
+ * This function creates a div (default hidden) with edit and delete buttons.
+ * @function toggleTransaction on user click switches the section to visible (and viceversa),
+ * @param transactionData and @param transactionElement are still used to refer to one specific transaction.
+ * For @param dataRow and @param amount use see editButton.onclick. 
+ */
 function createEditTransactionSection(transactionData, transactionElement, dataRow, amount){
     const editTransactionSection = document.createElement("div"); // hidden section by default 
     transactionElement.appendChild(editTransactionSection);
@@ -156,7 +187,6 @@ function createEditTransactionSection(transactionData, transactionElement, dataR
     transactionElement.onclick = function() {
         toggleTransaction();
 
-        /* event on edit button*/
         // editButton.onclick = function() {
         //     editButton.remove();
         //     deleteButton.remove();
@@ -246,9 +276,7 @@ function createEditTransactionSection(transactionData, transactionElement, dataR
     }
 }
 
-
-
-
+/* --------------------------------------------------------------------- */
 
 export default {
     userCategories: userCategories,

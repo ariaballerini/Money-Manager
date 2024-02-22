@@ -342,6 +342,7 @@ select {
     justify-content: center;
 }
 
+/* --------------------------------------------------------------------- */
 
  /*Mobile media query*/
  @media screen and (max-width: 800px) {
