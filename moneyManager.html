@@ -14,7 +14,17 @@
   </head>
   <body>
     <div class="gradient-background">
-      <div id="appContainer" class="appContainer">
+      <div id="login" class="login visible">
+        <div id="userAlerts"></div>
+        <input
+          type="text"
+          class="input loginInput"
+          id="loginInput"
+          placeholder="Insert username"
+        />
+        <button id="loginButton" class="button loginButton">Login</button>
+      </div>
+      <div id="appContainer" class="appContainer hidden">
         <div class="leftContent">
           <!-- all user data -->
           <div id="userData" class="userDataContainer">
@@ -36,7 +46,7 @@
             <div class="addContainer">
               <input
                 type="text"
-                class="form-control addDescription"
+                class="input addDescription"
                 id="addDescriptionInput"
                 placeholder="Insert description"
               />
@@ -46,7 +56,7 @@
             <div class="addContainer addAmountContainer">
               <input
                 type="text"
-                class="form-control addAmount"
+                class="input addAmount"
                 id="addInput"
                 placeholder="Insert amount"
               />

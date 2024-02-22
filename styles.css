@@ -46,11 +46,50 @@ html, body {
     justify-content: center;
     align-items: center;
     background: rgb(116 116 116 / 60%);
+    z-index: 1;
+}
+
+.login{
+    width: 100%;
+    height: 100vh;
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+}
+
+.loginInput {
+    width: 20rem;
+    height: 4rem !important;
+    font-size: 1rem !important;
+    margin-bottom: 2rem;
+}
+
+.errorLogin{
+    margin-bottom: 0.5rem;
+    color: red;
+}
+
+.loginButton{
+    width: 20rem !important;
+    height: 3rem !important;
+    font-size: 1rem !important;
+}
+
+.hidden{
+    visibility: hidden;
+}
+
+.visible{
+    visibility: visible;
 }
 
 .error {
-    border: 1px solid red !important; 
+    border: 3px solid red !important; 
 }
+
 
 .appContainer{
     width: 100%;
@@ -88,7 +127,7 @@ html, body {
 }
 
 /* <!-- insert new incomes or expenses --> */
-.form-control, select {
+.input, select {
     max-width: 60%;
     border-radius: 8px;
     border: none;
@@ -97,6 +136,10 @@ html, body {
     font-size: 0.8rem;
     font-weight: 400;
     text-align: center;
+}
+
+.input:focus {
+    outline: none;
 }
 
 .addDescription{
@@ -266,18 +309,13 @@ select {
     margin-left: 1rem;
     margin-right: 1rem;
     margin-bottom: 1rem;
+    display: flex;
+    justify-content: end;
 }
 
 .editUndoButtons {
     margin-left: 1rem;
     margin-bottom: 1rem;
-}
-
-.hidden{
-    display: none !important;
-}
-
-.visible{
     display: flex;
     justify-content: end;
 }
@@ -293,8 +331,19 @@ select {
     /* top section (ex left) */
 
     .gradient-background{
-        height: 250vh;
+        height: auto;
+        /* sets the height depending on content */
     }
+
+    .loginInput {
+        width: 20rem;
+        margin-bottom: 2rem;
+    }
+    
+    .loginButton{
+        width: 20rem !important;
+    }
+
     .appContainer{
         flex-direction: column;
     }
@@ -341,7 +390,7 @@ select {
         width: 100%;
     }
 
-    .form-control, select {
+    .input, select {
         height: 5rem;
         font-size: 1.2rem;
     }

@@ -37,6 +37,8 @@ function setUserInfo(userId){
     function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
     }
+
+    return userInfo;
 }
 
 /* function to set all user categories */
@@ -197,14 +199,15 @@ function createEditTransactionSection(transactionData, transactionElement, dataR
 }
 
 
+
+
+
 export default {
     setUserInfo:(userId)=> setUserInfo(userId),
     capitalizeFirstLetter:(string)=> capitalizeFirstLetter(string),
     setCategories:(userCategories)=> setCategories(userCategories),
     createCategory:(category, categoryList)=> createCategory(category, categoryList),
     userCategories: userCategories,
-    userInfo: userInfo,
-
     setTransactions:(userTransactions, orderBy = "newest")=> setTransactions(userTransactions, orderBy = "newest"),
     clickAddAmount:(newAmount, newDescription, incomeOption)=> clickAddAmount(newAmount, newDescription, incomeOption),
     createTransaction:(transactionData)=> createTransaction(transactionData),
